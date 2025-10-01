@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Task from './Task';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   addTask as addTaskToFirestore, 
   updateTask as updateTaskInFirestore, 
@@ -11,27 +12,33 @@ import {
 } from '../lib/firestore';
 
 export default function TaskList() {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // Subscribe to real-time updates from Firestore
   useEffect(() => {
-    const unsubscribe = subscribeToTasks((updatedTasks) => {
+    if (!user) {
+      setTasks([]);
+      return;
+    }
+
+    const unsubscribe = subscribeToTasks(user.uid, (updatedTasks: TaskItem[]) => {
       setTasks(updatedTasks);
     });
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   const addTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTaskTitle.trim() || isLoading) return;
+    if (!newTaskTitle.trim() || isLoading || !user) return;
 
     setIsLoading(true);
     try {
-      await addTaskToFirestore(newTaskTitle.trim());
+      await addTaskToFirestore(newTaskTitle.trim(), user.uid);
       setNewTaskTitle('');
     } catch (error) {
       console.error('Failed to add task:', error);

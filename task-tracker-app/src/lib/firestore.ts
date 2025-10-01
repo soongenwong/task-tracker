@@ -8,7 +8,8 @@ import {
   query, 
   orderBy, 
   onSnapshot,
-  Timestamp 
+  Timestamp,
+  where 
 } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -19,6 +20,7 @@ export interface TaskItem {
   dueDate?: Date;
   createdAt: Date;
   updatedAt: Date;
+  userId: string;
 }
 
 export interface TaskItemFirestore {
@@ -27,6 +29,7 @@ export interface TaskItemFirestore {
   dueDate?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  userId: string;
 }
 
 const TASKS_COLLECTION = 'tasks';
@@ -42,12 +45,13 @@ const convertDateToTimestamp = (date: Date): Timestamp => {
 };
 
 // Add a new task
-export const addTask = async (title: string, dueDate?: Date): Promise<string> => {
+export const addTask = async (title: string, userId: string, dueDate?: Date): Promise<string> => {
   try {
     const now = new Date();
     const taskData: TaskItemFirestore = {
       title: title.trim(),
       completed: false,
+      userId,
       createdAt: convertDateToTimestamp(now),
       updatedAt: convertDateToTimestamp(now),
     };
@@ -105,10 +109,14 @@ export const deleteTask = async (id: string): Promise<void> => {
   }
 };
 
-// Get all tasks (one-time fetch)
-export const getTasks = async (): Promise<TaskItem[]> => {
+// Get all tasks for a user (one-time fetch)
+export const getTasks = async (userId: string): Promise<TaskItem[]> => {
   try {
-    const q = query(collection(db, TASKS_COLLECTION), orderBy('createdAt', 'desc'));
+    const q = query(
+      collection(db, TASKS_COLLECTION), 
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
     const querySnapshot = await getDocs(q);
     
     return querySnapshot.docs.map(doc => {
@@ -117,6 +125,7 @@ export const getTasks = async (): Promise<TaskItem[]> => {
         id: doc.id,
         title: data.title,
         completed: data.completed,
+        userId: data.userId,
         dueDate: data.dueDate ? convertTimestampToDate(data.dueDate) : undefined,
         createdAt: convertTimestampToDate(data.createdAt),
         updatedAt: convertTimestampToDate(data.updatedAt),
@@ -128,9 +137,13 @@ export const getTasks = async (): Promise<TaskItem[]> => {
   }
 };
 
-// Subscribe to real-time task updates
-export const subscribeToTasks = (callback: (tasks: TaskItem[]) => void): () => void => {
-  const q = query(collection(db, TASKS_COLLECTION), orderBy('createdAt', 'desc'));
+// Subscribe to real-time task updates for a user
+export const subscribeToTasks = (userId: string, callback: (tasks: TaskItem[]) => void): () => void => {
+  const q = query(
+    collection(db, TASKS_COLLECTION), 
+    where('userId', '==', userId),
+    orderBy('createdAt', 'desc')
+  );
   
   return onSnapshot(q, (querySnapshot) => {
     const tasks = querySnapshot.docs.map(doc => {
@@ -139,6 +152,7 @@ export const subscribeToTasks = (callback: (tasks: TaskItem[]) => void): () => v
         id: doc.id,
         title: data.title,
         completed: data.completed,
+        userId: data.userId,
         dueDate: data.dueDate ? convertTimestampToDate(data.dueDate) : undefined,
         createdAt: convertTimestampToDate(data.createdAt),
         updatedAt: convertTimestampToDate(data.updatedAt),

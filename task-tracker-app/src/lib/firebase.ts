@@ -1,20 +1,27 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
-// Replace these with your actual Firebase config values
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyDq4nEy_JYGWd0NecU9zjV87wPy47kyb6k",
+  authDomain: "task-tracker-8e573.firebaseapp.com",
+  projectId: "task-tracker-8e573",
+  storageBucket: "task-tracker-8e573.firebasestorage.app",
+  messagingSenderId: "452554154575",
+  appId: "1:452554154575:web:1c49c13c131a4aad0f403a",
+  measurementId: "G-Y36FNYGB6P"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore
+// Initialize Firebase services
+export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const analytics = getAnalytics(app);
 
 export default app;
