@@ -7,11 +7,13 @@ interface TaskProps {
   title: string;
   completed: boolean;
   dueDate?: Date;
+  createdAt: Date;
+  updatedAt: Date;
   onComplete: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
-export default function Task({ id, title, completed, dueDate, onComplete, onDelete }: TaskProps) {
+export default function Task({ id, title, completed, dueDate, createdAt, updatedAt, onComplete, onDelete }: TaskProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (

@@ -1,41 +1,63 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Task from './Task';
-
-export interface TaskItem {
-  id: string;
-  title: string;
-  completed: boolean;
-  dueDate?: Date;
-}
+import { 
+  addTask as addTaskToFirestore, 
+  updateTask as updateTaskInFirestore, 
+  deleteTask as deleteTaskFromFirestore,
+  subscribeToTasks,
+  TaskItem
+} from '../lib/firestore';
 
 export default function TaskList() {
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const addTask = (e: React.FormEvent) => {
+  // Subscribe to real-time updates from Firestore
+  useEffect(() => {
+    const unsubscribe = subscribeToTasks((updatedTasks) => {
+      setTasks(updatedTasks);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
+
+  const addTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTaskTitle.trim()) return;
+    if (!newTaskTitle.trim() || isLoading) return;
 
-    const newTask: TaskItem = {
-      id: Date.now().toString(),
-      title: newTaskTitle.trim(),
-      completed: false,
-    };
-
-    setTasks([...tasks, newTask]);
-    setNewTaskTitle('');
+    setIsLoading(true);
+    try {
+      await addTaskToFirestore(newTaskTitle.trim());
+      setNewTaskTitle('');
+    } catch (error) {
+      console.error('Failed to add task:', error);
+      // You could add a toast notification here
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const completeTask = (id: string) => {
-    setTasks(tasks.map(task => 
-      task.id === id ? { ...task, completed: !task.completed } : task
-    ));
+  const completeTask = async (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    try {
+      await updateTaskInFirestore(id, { completed: !task.completed });
+    } catch (error) {
+      console.error('Failed to update task:', error);
+    }
   };
 
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter(task => task.id !== id));
+  const deleteTask = async (id: string) => {
+    try {
+      await deleteTaskFromFirestore(id);
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+    }
   };
 
   const handleDragStart = (e: React.DragEvent, taskId: string) => {
@@ -48,17 +70,9 @@ export default function TaskList() {
 
   const handleDrop = (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
-    const draggedTaskId = e.dataTransfer.getData('taskId');
-    if (draggedTaskId === targetId) return;
-
-    const taskList = [...tasks];
-    const draggedTaskIndex = taskList.findIndex(task => task.id === draggedTaskId);
-    const targetTaskIndex = taskList.findIndex(task => task.id === targetId);
-
-    const [draggedTask] = taskList.splice(draggedTaskIndex, 1);
-    taskList.splice(targetTaskIndex, 0, draggedTask);
-
-    setTasks(taskList);
+    // TODO: Implement task reordering with Firestore
+    // This would require adding an 'order' field to tasks and updating multiple documents
+    console.log('Drag and drop reordering not yet implemented with Firestore');
   };
 
   return (
@@ -69,12 +83,14 @@ export default function TaskList() {
           value={newTaskTitle}
           onChange={(e) => setNewTaskTitle(e.target.value)}
           placeholder="What are your top priorities for today?"
+          disabled={isLoading}
           className="w-full p-4 rounded-xl border border-blue-200/50 dark:border-blue-300/20
                    bg-blue-50/30 dark:bg-blue-900/20 backdrop-blur-sm focus:outline-none focus:ring-2 
                    focus:ring-blue-300/50 dark:focus:ring-blue-400/30 placeholder:text-blue-600/50
                    dark:placeholder:text-blue-300/60 text-blue-900 dark:text-white
                    transition-all duration-300 hover:border-blue-300/50 dark:hover:border-blue-200/30
-                   hover:bg-blue-100/30 dark:hover:bg-blue-800/30 hover:shadow-lg hover:shadow-blue-200/20 dark:hover:shadow-blue-500/10"
+                   hover:bg-blue-100/30 dark:hover:bg-blue-800/30 hover:shadow-lg hover:shadow-blue-200/20 dark:hover:shadow-blue-500/10
+                   disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </form>
 
