@@ -28,7 +28,7 @@ export default function Home() {
         </p>
       </header>
 
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {user ? (
           <>
             <div className="mb-8">
@@ -37,7 +37,9 @@ export default function Home() {
             <TaskList />
           </>
         ) : (
-          <AuthForm />
+          <div className="max-w-md mx-auto">
+            <AuthForm />
+          </div>
         )}
       </div>
     </div>

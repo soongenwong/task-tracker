@@ -30,8 +30,8 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
         await signIn(email, password);
       }
       onSuccess?.();
-    } catch (error: any) {
-      setError(error.message || 'An error occurred');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -46,8 +46,8 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
     try {
       await signInWithGoogle();
       onSuccess?.();
-    } catch (error: any) {
-      setError(error.message || 'An error occurred');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -65,8 +65,8 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
     try {
       await resetPassword(email);
       setResetEmailSent(true);
-    } catch (error: any) {
-      setError(error.message || 'An error occurred');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
             Check Your Email
           </h2>
           <p className="text-blue-700 dark:text-blue-200 mb-4">
-            We've sent a password reset link to {email}
+            We&apos;ve sent a password reset link to {email}
           </p>
           <button
             onClick={() => setResetEmailSent(false)}
@@ -193,7 +193,7 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
           onClick={() => setIsSignUp(!isSignUp)}
           className="text-blue-600 dark:text-blue-300 hover:underline text-sm"
         >
-          {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+          {isSignUp ? 'Already have an account? Sign in' : 'Don\'t have an account? Sign up'}
         </button>
 
         {!isSignUp && (
