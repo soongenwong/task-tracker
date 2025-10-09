@@ -3,6 +3,7 @@
 import TaskList from '../components/TaskList';
 import AuthForm from '../components/AuthForm';
 import UserProfile from '../components/UserProfile';
+import Navigation from '../components/Navigation';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Home() {
@@ -34,6 +35,7 @@ export default function Home() {
             <div className="mb-8">
               <UserProfile />
             </div>
+            <Navigation />
             <TaskList />
           </>
         ) : (
